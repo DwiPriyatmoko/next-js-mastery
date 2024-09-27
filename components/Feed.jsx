@@ -19,19 +19,43 @@ const PromptCardList = ({ data, handleTagClick }) => {
 const Feed = () => {
 	const [searchText, setSearchText] = useState('');
 	const [posts, setPosts] = useState([]);
+	const [filteredPosts, setFilteredPosts] = useState([]);
 
 	const handleSearchChange = (e) => {
-		setSearchText(e.target.value);
+		const searchTerm = e.target.value;
+		setSearchText(searchTerm);
+		filterPosts(searchTerm);
+	};
+
+	const handleTagClick = (tag) => {
+		setSearchText(tag);
+		filterPosts(tag);
+	};
+
+	const filterPosts = (searchTerm) => {
+		const searchTextLower = searchTerm.toLowerCase();
+		const filtered = posts.filter((post) => {
+			const postContentMatch = post.content
+				?.toLowerCase()
+				.includes(searchTextLower);
+			const tagsMatch = post.tags?.some((tag) =>
+				tag.toLowerCase().includes(searchTextLower)
+			);
+			const usernameMatch = post.username
+				?.toLowerCase()
+				.includes(searchTextLower);
+			return postContentMatch || tagsMatch || usernameMatch;
+		});
+		setFilteredPosts(filtered);
 	};
 
 	useEffect(() => {
 		const fetchPosts = async () => {
 			const response = await fetch('/api/prompt');
 			const data = await response.json();
-
 			setPosts(data);
+			setFilteredPosts(data); // Initialize filteredPosts with all posts
 		};
-		console.log(posts);
 
 		fetchPosts();
 	}, []);
@@ -41,14 +65,14 @@ const Feed = () => {
 			<form className="relative w-full flex-center">
 				<input
 					type="text"
-					placeholder="Search for a tag or a username"
+					placeholder="Search for a tag, username, or prompt"
 					value={searchText}
 					onChange={handleSearchChange}
 					required
 					className="search_input peer"
 				/>
 			</form>
-			<PromptCardList data={posts} handleTagClick={() => {}} />
+			<PromptCardList data={filteredPosts} handleTagClick={handleTagClick} />
 		</section>
 	);
 };
