@@ -16,28 +16,49 @@ const EditPrompt = () => {
 	});
 
 	useEffect(() => {
-		const getPromptDetails = async () => {
-			const response = await fetch(`/api/prompt/${promptId}`);
-			const data = await response.json();
+		if (!promptId) return;
 
-			setPost({
-				prompt: data.prompt,
-				tag: data.tag,
-			});
+		const getPromptDetails = async () => {
+			try {
+				const response = await fetch(`/api/prompt/${promptId}`);
+				if (response.ok) {
+					const data = await response.json();
+					setPost({
+						prompt: data.prompt,
+						tag: data.tag,
+					});
+				} else {
+					// Log response detail for debugging
+					console.error(
+						'Failed to fetch prompt details:',
+						response.status,
+						response.statusText
+					);
+				}
+			} catch (error) {
+				console.error('Error fetching prompt details', error);
+			}
 		};
 
-		if (promptId) getPromptDetails();
+		getPromptDetails();
 	}, [promptId]);
 
 	const UpdatePrompt = async (e) => {
 		e.preventDefault();
 		setSubmitting(true);
 
-		if (!promptId) return alert('Prompt ID not found');
+		if (!promptId) {
+			alert('Prompt ID not found');
+			setSubmitting(false);
+			return;
+		}
 
 		try {
 			const response = await fetch(`/api/prompt/${promptId}`, {
 				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json',
+				},
 				body: JSON.stringify({
 					prompt: post.prompt,
 					tag: post.tag,
@@ -46,9 +67,16 @@ const EditPrompt = () => {
 
 			if (response.ok) {
 				router.push('/');
+			} else {
+				// Provide detailed error information
+				console.error(
+					'Failed to update prompt:',
+					response.status,
+					response.statusText
+				);
 			}
 		} catch (error) {
-			console.error('Error creating prompt', error);
+			console.error('Error updating prompt', error);
 		} finally {
 			setSubmitting(false);
 		}
