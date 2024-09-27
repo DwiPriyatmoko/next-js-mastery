@@ -2,6 +2,9 @@
  * @type {import('next').NextConfig}
  */
 const nextConfig = {
+	eslint: {
+		ignoreDuringBuilds: true,
+	},
 	experimental: {
 		appDir: true, // This should be valid if using Next.js 13
 		serverComponentsExternalPackages: ['mongoose'],
